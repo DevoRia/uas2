@@ -59,11 +59,10 @@ make
 ### Compile and Run
 
 ```bash
-# Using the CLI
-./build/uas hello.uas > hello.cpp
-clang++ -O3 hello.cpp -o hello -Icpp/runtime
-./hello
+# Simple one-command execution
+./uas hello.uas
 ```
+
 
 ## 📖 Language Syntax
 
