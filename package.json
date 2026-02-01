@@ -1,0 +1,23 @@
+{
+  "name": "uascript2",
+  "version": "0.1.0",
+  "description": "Ukrainian programming language with bytecode VM - FP/OOP hybrid",
+  "main": "dist/index.js",
+  "bin": {
+    "uas2": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "repl": "node dist/cli.js repl",
+    "test": "node --test dist/**/*.test.js",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["ukrainian", "programming-language", "bytecode", "vm", "functional"],
+  "author": "UaScript Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

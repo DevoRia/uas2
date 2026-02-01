@@ -1,0 +1,17 @@
+node_modules/\ndist/\nbuild/\n.DS_Store
+
+node_modules/
+dist/
+build/
+.next/
+.vercel/
+*.db
+*.sqlite
+*.log
+.env
+.env.local
+.env.*
+.idea
+node_modules
+package-lock.json
+dist
