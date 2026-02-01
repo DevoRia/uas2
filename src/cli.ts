@@ -71,7 +71,7 @@ print("Hello, World!")
 
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.length === 0 || args[0] === 'repl') {
     await repl();
   } else if (args[0] === '-h' || args[0] === '--help') {
@@ -99,22 +99,91 @@ Usage:
   } else if (args[0] === '-d') {
     const filePath = args[1];
     runFile(filePath, true);
+  } else if (args[0] === 'compile' || args[0] === '-c') {
+    const filePath = args[1];
+    if (!filePath) {
+      console.error('Будь ласка, вкажіть файл для компіляції / Please specify file to compile');
+      process.exit(1);
+    }
+    compileFile(filePath);
+  } else if (args[0] === 'execute' || args[0] === '-x') {
+    const filePath = args[1];
+    runBytecodeFile(filePath);
   } else {
-    runFile(args[0], false);
+    // Check extension
+    if (args[0].endsWith('.uasb')) {
+      runBytecodeFile(args[0]);
+    } else {
+      runFile(args[0], false);
+    }
   }
 }
 
-function runFile(filePath: string, debug: boolean) {
+function compileFile(filePath: string) {
   const resolvedPath = path.resolve(filePath);
-  
   if (!fs.existsSync(resolvedPath)) {
     console.error(`Файл не знайдено / File not found: ${filePath}`);
     process.exit(1);
   }
-  
+
+  const source = fs.readFileSync(resolvedPath, 'utf-8');
+
+  import('./index.js').then(({ compile }) => {
+    const result = compile(source);
+    if (!result.success || !result.module) {
+      console.error('Помилка компіляції / Compilation error:', result.error);
+      process.exit(1);
+    }
+
+    import('./serializer.js').then(({ Serializer }) => {
+      const serializer = new Serializer();
+      const buffer = serializer.serialize(result.module!);
+
+      const outputPath = resolvedPath.replace(/\.uas$/, '.uasb');
+      fs.writeFileSync(outputPath, buffer);
+      console.log(`Скомпільовано в ${outputPath} / Compiled to ${outputPath}`);
+    });
+  });
+}
+
+function runBytecodeFile(filePath: string) {
+  const resolvedPath = path.resolve(filePath);
+  if (!fs.existsSync(resolvedPath)) {
+    console.error(`Файл не знайдено / File not found: ${filePath}`);
+    process.exit(1);
+  }
+
+  const buffer = fs.readFileSync(resolvedPath);
+
+  import('./deserializer.js').then(({ Deserializer }) => {
+    try {
+      const deserializer = new Deserializer(buffer);
+      const module = deserializer.deserialize();
+
+      import('./index.js').then(({ VM }) => {
+        const vm = new VM();
+        // Simple output handler
+        vm.onOutput = console.log;
+        vm.run(module);
+      });
+    } catch (e: any) {
+      console.error('Помилка виконання байткоду / Bytecode execution error:', e.message);
+      process.exit(1);
+    }
+  });
+}
+
+function runFile(filePath: string, debug: boolean) {
+  const resolvedPath = path.resolve(filePath);
+
+  if (!fs.existsSync(resolvedPath)) {
+    console.error(`Файл не знайдено / File not found: ${filePath}`);
+    process.exit(1);
+  }
+
   const source = fs.readFileSync(resolvedPath, 'utf-8');
   const result = run(source, { debug });
-  
+
   if (!result.success) {
     console.error('Помилка / Error:', result.error);
     process.exit(1);
@@ -123,21 +192,21 @@ function runFile(filePath: string, debug: boolean) {
 
 async function repl() {
   console.log(BANNER);
-  
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
     prompt: 'uas> ',
   });
-  
+
   let multilineBuffer = '';
   let braceCount = 0;
-  
+
   rl.prompt();
-  
+
   rl.on('line', (line: string) => {
     const trimmed = line.trim();
-    
+
     // Commands
     if (!multilineBuffer) {
       if (trimmed === 'вихід' || trimmed === 'exit' || trimmed === 'quit') {
@@ -145,19 +214,19 @@ async function repl() {
         rl.close();
         return;
       }
-      
+
       if (trimmed === 'допомога' || trimmed === 'help') {
         console.log(HELP);
         rl.prompt();
         return;
       }
-      
+
       if (trimmed === 'приклад' || trimmed === 'example' || trimmed === 'examples') {
         console.log(EXAMPLES);
         rl.prompt();
         return;
       }
-      
+
       if (trimmed === 'очистити' || trimmed === 'clear') {
         console.clear();
         console.log(BANNER);
@@ -165,34 +234,34 @@ async function repl() {
         return;
       }
     }
-    
+
     // Track braces for multiline input
     for (const char of line) {
       if (char === '{') braceCount++;
       if (char === '}') braceCount--;
     }
-    
+
     multilineBuffer += line + '\n';
-    
+
     if (braceCount > 0) {
       rl.setPrompt('... ');
       rl.prompt();
       return;
     }
-    
+
     // Execute
     const code = multilineBuffer.trim();
     multilineBuffer = '';
     braceCount = 0;
     rl.setPrompt('uas> ');
-    
+
     if (!code) {
       rl.prompt();
       return;
     }
-    
+
     const result = run(code);
-    
+
     if (result.success) {
       if (result.value && result.value.type !== 'none') {
         console.log('→', formatValue(result.value));
@@ -200,10 +269,10 @@ async function repl() {
     } else {
       console.error('Помилка:', result.error);
     }
-    
+
     rl.prompt();
   });
-  
+
   rl.on('close', () => {
     process.exit(0);
   });
