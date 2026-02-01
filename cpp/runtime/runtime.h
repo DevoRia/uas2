@@ -70,6 +70,11 @@ bool isTruthy(const Value& v) {
     return false;
 }
 
+inline bool isTruthy(bool b) { return b; }
+inline bool isTruthy(double d) { return d != 0; }
+inline bool isTruthy(int i) { return i != 0; }
+
+
 void print(const Value& v) {
     if (v.type == VAL_NUMBER) std::cout << v.numberVal;
     else if (v.type == VAL_BOOL) std::cout << (v.boolVal ? "true" : "false");

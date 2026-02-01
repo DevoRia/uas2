@@ -1,4 +1,4 @@
-# UaScript 2.0 AOT Compiler Makefile
+# UAS 2.0 (UaScript 2) AOT Compiler Makefile
 
 CXX = /usr/bin/clang++
 CXXFLAGS = -std=c++17 -O3

@@ -1,225 +1,126 @@
-# UaScript 2.0
+# UAS (UaScript 2) 🚀
 
-**A programming language with Ukrainian syntax and AOT compilation to native code**
+**A high-performance programming language with Ukrainian syntax and AOT compilation**
 
-UaScript 2.0 is a programming language that supports Ukrainian keywords and compiles directly to machine code via C++, achieving **performance that exceeds Node.js**.
+UAS is the successor to [UaScript](https://github.com/DevoRia/UaScript), redesigned from the ground up for maximum performance and native execution. Unlike the original UaScript which transpiled to JavaScript, **UAS** compiles directly to machine code via C++ (AOT), achieving performance that matches native C++ and significantly exceeds Node.js and Python.
 
-## Features
+## 🌟 Key Differences from UaScript (v1)
 
-- ✅ **Bilingual** - Write code in Ukrainian or English
-- ✅ **AOT Compilation** - UaScript → C++ → Native Code
-- ✅ **Optional Static Typing** - For maximum performance
-- ✅ **Faster than Node.js** - Thanks to ahead-of-time compilation
-- ✅ **Simple and clear syntax**
+| Feature | UaScript (v1) | UAS (v2) |
+|:---|:---|:---|
+| **Engine** | Node.js (JavaScript) | C++ (AOT Compilation) |
+| **Performance** | Slow (Interpreted/JS) | **Native (matching C++)** |
+| **Types** | Dynamic only | **Optional Static Typing** |
+| **Operators** | Standard JS | Added `**` (power), `%` (modulo) |
+| **Execution** | Needs Node.js | **Native Binary** |
 
-## Benchmarks
+## 🚀 Performance Benchmarks
 
-### Fibonacci(30) - Performance Comparison
+### Fibonacci(30) - Recursive Test
 
-Real-world performance test using recursive Fibonacci calculation:
+| Implementation | Time (ms) | Speedup |
+|:---| :--- |:---|
+| **UAS2 (AOT)** | **~2 ms** | **🏆 1.0x (Baseline)** |
+| Node.js (V8) | ~11 ms | 5.5x slower |
+| **UaScript v1** | **~29 ms** | **14.5x slower** |
+| Python 3 | ~232 ms | 116x slower |
 
-| Language | Implementation | Time | Performance |
-|:---------|:---------------|:-----|:------------|
-| **UaScript 2.0** | **AOT (C++ with types)** | **~10ms** | **🏆 1.0x (Baseline)** |
-| Node.js | V8 JIT (fib 25) | ~11-13ms | 1.1-1.3x slower |
-| Python 3 | CPython Interpreter | ~232ms | **23x slower** |
+*UAS is ~15x faster than the original UaScript and ~5x faster than Node.js.*
 
-**Key Takeaways:**
-- ✅ UaScript 2.0 with type hints achieves **native C++ performance**
-- ✅ **Faster than Node.js** thanks to ahead-of-time compilation
-- ✅ **23x faster than Python** for compute-intensive tasks
-- ✅ Zero runtime overhead with static types
+## 🛠 Features
 
-### How to Run Benchmarks
+- ✅ **Bilingual** - Write and mix code in Ukrainian or English.
+- ✅ **AOT Compilation** - Generates highly optimized C++17 code compiled with Clang/GCC.
+- ✅ **Static Typing** - Optional type hints (`: number`, `: string`, `: bool`) for zero-overhead execution.
+- ✅ **Native Binaries** - Distribute your programs as small, fast executables with no dependencies.
+- ✅ **Clean Syntax** - Modern, readable syntax inspired by JavaScript/TypeScript but optimized for AOT.
 
-```bash
-make benchmark  # Runs UaScript + Node.js comparison
-python3 benchmarks/benchmark.py  # Python comparison
-```
+## 🚦 Quick Start
 
-**Note:** UaScript's speed comes from compiling directly to native machine code with static type information, eliminating the need for runtime type checks and JIT compilation overhead.
-
-## Quick Start
-
-### Installation
+### Build the Compiler
 
 ```bash
-git clone https://github.com/yourusername/uas2.git
+git clone https://github.com/DevoRia/uas2.git
 cd uas2
 make
 ```
 
-### Example Code
+### Write Your First Code (`hello.uas`)
 
 ```javascript
-// In Ukrainian
-функція фібоначчі(n: число): число {
-    якщо n < 2 {
-        повернути n
-    }
-    повернути фібоначчі(n - 1) + фібоначчі(n - 2)
+// Function with type hints for performance
+функція привітання(ім'я: стрічка) {
+    друк("Привіт, " + ім'я + "!")
 }
 
-друк("Result: " + фібоначчі(10))
-```
-
-```javascript
-// In English
-fun fibonacci(n: number): number {
-    if n < 2 {
-        return n
-    }
-    return fibonacci(n - 1) + fibonacci(n - 2)
-}
-
-print("Result: " + fibonacci(10))
+привітання("Світ")
 ```
 
 ### Compile and Run
 
 ```bash
-# Simple way
-make run FILE=myprogram.uas
-
-# Or step by step
-build/uas myprogram.uas > output.cpp
-clang++ -O3 -o myprogram output.cpp -Icpp/runtime -std=c++17
-./myprogram
+# Using the CLI
+./build/uas hello.uas > hello.cpp
+clang++ -O3 hello.cpp -o hello -Icpp/runtime
+./hello
 ```
 
-## Documentation
+## 📖 Language Syntax
 
-### Supported Features
-
-#### 1. Variables with Types
+### Variable Declarations
 ```javascript
-нехай x: число = 42
-нехай текст = "Hello"  // type inferred automatically
-змінна counter: число = 0  // mutable variable
+нехай x: число = 10      // Typed constant
+змінна y = "текст"       // Inferred mutable variable
+let z = так              // English keyword support
 ```
 
-#### 2. Functions
+### Functions
 ```javascript
-функція додати(a: число, b: число): число {
-    повернути a + b
+функція додати(а: число, б: число): число {
+    повернути а + б
 }
 ```
 
-#### 3. Conditionals
+### Control Flow
 ```javascript
-якщо x > 10 {
-    друк("Greater")
+якщо x > 0 {
+    друк("Positive")
 } інакше {
-    друк("Less")
+    друк("Negative")
+}
+
+поки x > 0 {
+    друк(x)
+    x = x - 1
 }
 ```
 
-#### 4. Loops
-```javascript
-поки i < 10 {
-    друк(i)
-    i = i + 1
-}
-```
+## 📂 Project Structure
 
-#### 5. Operators
-- Arithmetic: `+`, `-`, `*`, `/`, `%`, `**` (power)
-- Comparison: `<`, `>`, `<=`, `>=`, `==`
-- Logical: `так` (true), `ні` (false)
+- `benchmarks/` — Performance tests and comparison scripts.
+- `build/` — Compiler binaries and build artifacts.
+- `cpp/`
+  - `runtime/` — The C++ header-only runtime library.
+  - `src/` — Compiler source code (Lexer, Parser, Transpiler).
+- `examples/` — Comprehensive code examples in Ukrainian.
+- `UaScript_v1/` — Legace version 1 for compatibility/benchmarking.
 
-### Keywords
+## ⚙️ Makefile Commands
 
-| Ukrainian | English | Description |
-|:----------|:--------|:------------|
-| `функція` | `fn`, `fun` | Function declaration |
-| `нехай`, `змінна` | `let` | Variable |
-| `якщо` | `if` | Conditional |
-| `інакше` | `else` | Else |
-| `поки` | `while` | Loop |
-| `повернути` | `return` | Return value |
-| `друк` | `print` | Print to console |
-| `так` | `true` | True |
-| `ні` | `false` | False |
-| `нічого` | `null` | Null value |
+- `make` — Compile the `uas` compiler.
+- `make run FILE=path.uas` — Compile and execute a UAS file in one go.
+- `make benchmark` — Run the performance comparison suite.
+- `make test` — Run automated tests on examples.
+- `make clean` — Remove all build artifacts.
 
-### Data Types
+## 🛣 Roadmap
 
-- `число` / `number` - Numbers (double)
-- `стрічка` / `string` - Strings
-- `бул` / `bool` - Booleans
-
-## Makefile Commands
-
-```bash
-make          # Build compiler
-make test     # Run tests
-make benchmark # Run benchmarks
-make clean    # Clean build directory
-make run FILE=file.uas  # Compile and run file
-```
-
-## Project Structure
-
-```
-uas2/
-├── benchmarks/     # Performance benchmarks
-│   ├── benchmark.uas
-│   └── benchmark.js
-├── build/          # Compiled binaries (git ignored)
-├── cpp/
-│   ├── runtime/    # C++ runtime for UaScript
-│   └── src/        # Compiler (lexer, parser, transpiler)
-├── examples/       # Code examples
-│   ├── 01_hello.uas
-│   └── 02_calculator.uas
-├── Makefile        # Build system
-├── README.md
-└── DESIGN.md       # Language design documentation
-```
-
-## How It Works
-
-1. **Lexer** - Tokenizes source code
-2. **Parser** - Builds AST (Abstract Syntax Tree)
-3. **Transpiler** - Generates typed C++ code
-4. **Clang++** - Compiles C++ to native machine code
-5. **Execution** - Runs as native executable
-
-## Why Faster than Node.js?
-
-1. **Ahead-Of-Time compilation** instead of Just-In-Time
-2. **Static types** - compiler knows types in advance
-3. **Zero overhead** - generates clean C++ code
-4. **Clang++ optimizations** - full optimization at machine code level
-
-## Examples
-
-See `examples/` folder for more:
-- `01_hello.uas` - Hello World
-- `02_calculator.uas` - Calculator with all operators
-
-## Contributing
-
-Contributions are welcome! Feel free to:
-- Add new features
-- Improve documentation
-- Report bugs
-- Suggest ideas
-
-## License
-
-MIT License
-
-## Roadmap
-
-- [ ] Arrays and collections
-- [ ] Classes and objects
-- [ ] Closures
-- [ ] Module system
-- [ ] Package manager
-- [ ] IDE support (VS Code extension)
-- [ ] More optimizations
+- [ ] Lists/Arrays and Map support.
+- [ ] Object-Oriented Programming (Classes).
+- [ ] Standard Library (File I/O, Networking).
+- [ ] VS Code Extension with syntax highlighting.
+- [ ] Standalone package manager.
 
 ---
 
-**Built with modern compiler technology**
+**UAS** — The next level of Ukrainian programming. High speed, native power, native language.

@@ -1,8 +1,6 @@
-# UaScript 2.0 — Programming Language
+# UAS (UaScript 2.0) Design Specification
 
-## Philosophy
-
-**"Modern language for modern developers — in English and Ukrainian"**
+**UAS** (pronounced "U-A-S") is a high-performance, AOT-compiled programming language designed as the evolutionary successor to UaScript.
 
 Taking the best from:
 - **Kotlin/Scala** — elegant syntax, null-safety, data classes
