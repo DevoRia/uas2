@@ -11,11 +11,15 @@ enum NodeType {
     FUNCTION_DECL,
     BLOCK_STMT,
     IF_STMT,
+    SWITCH_STMT,
     WHILE_STMT,
     RETURN_STMT,
     LET_STMT,
+    ASSIGN_STMT,
     EXPR_STMT,
+    ASSIGN_EXPR,
     BINARY_EXPR,
+    UNARY_EXPR,
     CALL_EXPR,
     LITERAL,
     IDENTIFIER
@@ -53,6 +57,13 @@ struct BinaryExpr : Expression {
         : op(o), left(std::move(l)), right(std::move(r)) { type = BINARY_EXPR; }
 };
 
+struct UnaryExpr : Expression {
+    std::string op;
+    std::unique_ptr<Expression> right;
+    UnaryExpr(std::string o, std::unique_ptr<Expression> r) 
+        : op(o), right(std::move(r)) { type = UNARY_EXPR; }
+};
+
 struct CallExpr : Expression {
     std::unique_ptr<Expression> callee;
     std::vector<std::unique_ptr<Expression>> args;
@@ -85,6 +96,19 @@ struct IfStmt : Statement {
         : condition(std::move(c)), thenBranch(std::move(t)), elseBranch(std::move(e)) { type = IF_STMT; }
 };
 
+struct SwitchStmt : Statement {
+    struct Case {
+        std::string patternName; // "_" or variable name
+        std::unique_ptr<Expression> value; // nullptr if it's a variable pattern or default
+        std::unique_ptr<Expression> guard; // optional "if" condition
+        std::unique_ptr<Statement> body;
+    };
+    std::unique_ptr<Expression> discriminant;
+    std::vector<Case> cases;
+    SwitchStmt(std::unique_ptr<Expression> d, std::vector<Case> c)
+        : discriminant(std::move(d)), cases(std::move(c)) { type = SWITCH_STMT; }
+};
+
 struct FunctionDecl : Statement {
     std::string name;
     struct Param {
@@ -109,6 +133,20 @@ struct LetStmt : Statement {
 struct ExprStmt : Statement {
     std::unique_ptr<Expression> expr;
     ExprStmt(std::unique_ptr<Expression> e) : expr(std::move(e)) { type = EXPR_STMT; }
+};
+
+struct AssignStmt : Statement {
+    std::string name;
+    std::unique_ptr<Expression> value;
+    AssignStmt(std::string n, std::unique_ptr<Expression> v)
+        : name(n), value(std::move(v)) { type = ASSIGN_STMT; }
+};
+
+struct AssignExpr : Expression {
+    std::string name;
+    std::unique_ptr<Expression> value;
+    AssignExpr(std::string n, std::unique_ptr<Expression> v)
+        : name(n), value(std::move(v)) { type = ASSIGN_EXPR; }
 };
 
 #endif

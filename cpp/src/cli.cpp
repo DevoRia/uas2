@@ -26,12 +26,6 @@ int main(int argc, char* argv[]) {
     Lexer lexer(source);
     auto tokens = lexer.tokenize();
     
-    // For debug, list tokens?
-    // for (auto& t : tokens) {
-    //      std::cout << t.text << "(" << t.type << ") ";
-    // }
-    // std::cout << std::endl;
-    
     Parser parser(tokens);
     auto program = parser.parse();
     

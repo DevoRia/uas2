@@ -43,12 +43,11 @@ struct Value {
     Value operator/(const Value& other) const { return Value(numberVal / other.numberVal); }
     
     Value operator%(const Value& other) const { 
-        return Value((long)numberVal % (long)other.numberVal); 
+        return Value(fmod(numberVal, other.numberVal)); 
     }
     
-    Value operator^(const Value& other) const {
-         return Value(std::pow(numberVal, other.numberVal));
-    }
+    // Support ** as ^ operator in generated code
+    Value operator^(const Value& other) const { return Value(pow(numberVal, other.numberVal)); }
 
     Value operator<(const Value& other) const { return Value(numberVal < other.numberVal); }
     Value operator>(const Value& other) const { return Value(numberVal > other.numberVal); }
@@ -58,25 +57,36 @@ struct Value {
     Value operator==(const Value& other) const {
         if (type != other.type) return Value(false);
         if (type == VAL_NUMBER) return Value(numberVal == other.numberVal);
+        if (type == VAL_BOOL) return Value(boolVal == other.boolVal);
+        if (type == VAL_STRING) return Value(stringVal == other.stringVal);
+        if (type == VAL_NONE && other.type == VAL_NONE) return Value(true);
         return Value(false);
     }
 };
 
+// Global operators for mixed double/Value operations (for string concat)
+inline Value operator+(double d, const Value& v) { return Value(d) + v; }
+inline Value operator+(const Value& v, double d) { return v + Value(d); }
+inline Value operator+(const std::string& s, const Value& v) { return Value(s) + v; }
+inline Value operator+(const Value& v, const std::string& s) { return v + Value(s); }
+
 const Value NONE_VAL;
 
-bool isTruthy(const Value& v) {
+inline bool isTruthy(bool b) { return b; }
+inline bool isTruthy(double d) { return d != 0; }
+inline bool isTruthy(int i) { return i != 0; }
+inline bool isTruthy(const Value& v) {
     if (v.type == VAL_BOOL) return v.boolVal;
     if (v.type == VAL_NUMBER) return v.numberVal != 0;
     return false;
 }
 
-inline bool isTruthy(bool b) { return b; }
-inline bool isTruthy(double d) { return d != 0; }
-inline bool isTruthy(int i) { return i != 0; }
-
 
 void print(const Value& v) {
-    if (v.type == VAL_NUMBER) std::cout << v.numberVal;
+    if (v.type == VAL_NUMBER) {
+        if (v.numberVal == (long)v.numberVal) std::cout << (long)v.numberVal;
+        else std::cout << v.numberVal;
+    }
     else if (v.type == VAL_BOOL) std::cout << (v.boolVal ? "true" : "false");
     else if (v.type == VAL_STRING) std::cout << v.stringVal;
     else std::cout << "none";

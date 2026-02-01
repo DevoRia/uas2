@@ -64,11 +64,15 @@ public:
             case FUNCTION_DECL: visitFunction((FunctionDecl*)node); break;
             case BLOCK_STMT: visitBlock((BlockStmt*)node); break;
             case IF_STMT: visitIf((IfStmt*)node); break;
+            case SWITCH_STMT: visitSwitch((SwitchStmt*)node); break;
             case WHILE_STMT: visitWhile((WhileStmt*)node); break;
             case RETURN_STMT: visitReturn((ReturnStmt*)node); break;
             case LET_STMT: visitLet((LetStmt*)node); break;
+            case ASSIGN_STMT: visitAssign((AssignStmt*)node); break;
             case EXPR_STMT: visitExprStmt((ExprStmt*)node); break;
+            case ASSIGN_EXPR: visitAssignExpr((AssignExpr*)node); break;
             case BINARY_EXPR: visitBinary((BinaryExpr*)node); break;
+            case UNARY_EXPR: visitUnary((UnaryExpr*)node); break;
             case CALL_EXPR: visitCall((CallExpr*)node); break;
             case LITERAL: visitLiteral((Literal*)node); break;
             case IDENTIFIER: visitIdentifier((Identifier*)node); break;
@@ -100,12 +104,82 @@ public:
     void visitIf(IfStmt* stmt) {
         indent(); ss << "if (isTruthy(";
         visit(stmt->condition.get());
-        ss << ")) ";
+        ss << ")) {\n";
+        indentLevel++;
         visit(stmt->thenBranch.get());
+        indentLevel--;
+        indent(); ss << "}";
         if (stmt->elseBranch) {
-            ss << " else ";
+            ss << " else {\n";
+            indentLevel++;
             visit(stmt->elseBranch.get());
+            indentLevel--;
+            indent(); ss << "}";
         }
+        ss << "\n";
+    }
+    
+    void visitSwitch(SwitchStmt* stmt) {
+        indent(); ss << "{\n";
+        indentLevel++;
+        indent(); ss << "Value _sw = "; visit(stmt->discriminant.get()); ss << ";\n";
+        
+        bool first = true;
+        for (auto& c : stmt->cases) {
+            indent();
+            if (!first) ss << "else ";
+            
+            bool isDefault = (c.patternName == "_" && !c.value);
+            
+            if (isDefault) {
+                ss << "{\n";
+            } else {
+                ss << "if (";
+                bool needsAnd = false;
+                if (c.value) {
+                    ss << "isTruthy(_sw == ";
+                    visit(c.value.get());
+                    ss << ")";
+                    needsAnd = true;
+                }
+                
+                if (!c.patternName.empty() && c.patternName != "_") {
+                    // Variable binding - in simple transpiler we just allow it if guard or body uses it
+                }
+                
+                if (c.guard) {
+                    if (needsAnd) ss << " && ";
+                    // To support variable name in guard, we'd need a lambda or similar.
+                    // For now, let's assume the variable name is just used in the body.
+                    // If we want it in guard:
+                    ss << "isTruthy([&](){ ";
+                    if (!c.patternName.empty() && c.patternName != "_") {
+                        ss << "Value " << c.patternName << " = _sw; ";
+                    }
+                    ss << "return ";
+                    visit(c.guard.get());
+                    ss << "; }())";
+                } else if (!needsAnd) {
+                    ss << "true"; 
+                }
+                
+                ss << ") {\n";
+            }
+            
+            indentLevel++;
+            if (!c.patternName.empty() && c.patternName != "_") {
+                indent(); ss << "Value " << c.patternName << " = _sw;\n";
+            }
+            visit(c.body.get());
+            indentLevel--;
+            indent(); ss << "}\n";
+            
+            first = false;
+            if (isDefault) break; // nothing after default
+        }
+        
+        indentLevel--;
+        indent(); ss << "}\n";
     }
     
     void visitWhile(WhileStmt* stmt) {
@@ -128,21 +202,54 @@ public:
         ss << ";\n";
     }
     
+    void visitAssign(AssignStmt* stmt) {
+        indent(); ss << stmt->name << " = ";
+        visit(stmt->value.get());
+        ss << ";\n";
+    }
+    
     void visitExprStmt(ExprStmt* stmt) {
         indent();
         visit(stmt->expr.get());
         ss << ";\n";
     }
+
+    void visitAssignExpr(AssignExpr* expr) {
+        ss << "(" << expr->name << " = ";
+        visit(expr->value.get());
+        ss << ")";
+    }
     
     void visitBinary(BinaryExpr* expr) {
+        if (expr->op == "%") {
+            ss << "fmod(";
+            visit(expr->left.get());
+            ss << ", ";
+            visit(expr->right.get());
+            ss << ")";
+            return;
+        }
+        if (expr->op == "**") {
+            ss << "pow(";
+            visit(expr->left.get());
+            ss << ", ";
+            visit(expr->right.get());
+            ss << ")";
+            return;
+        }
         ss << "(";
         visit(expr->left.get());
-        if (expr->op == "**") ss << " ^ "; // Overloaded ^ for power? C++ has ^ for XOR.
-        // Better to use a function or overload ^ in Value.
-        // I overloaded ^ in Runtime.
-        else ss << " " << expr->op << " ";
+        // Original comment: if (expr->op == "**") ss << " ^ "; // Overloaded ^ for power? C++ has ^ for XOR.
+        // Original comment: // Better to use a function or overload ^ in Value.
+        // Original comment: // I overloaded ^ in Runtime.
+        ss << " " << expr->op << " "; // Now ** is handled by pow, so no special ^ mapping here.
         visit(expr->right.get());
         ss << ")";
+    }
+    
+    void visitUnary(UnaryExpr* expr) {
+        ss << expr->op;
+        visit(expr->right.get());
     }
     
     void visitCall(CallExpr* expr) {

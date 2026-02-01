@@ -8,11 +8,12 @@
 
 enum TokenType {
     TOK_FN, TOK_LET, TOK_IF, TOK_ELSE, TOK_RETURN, TOK_WHILE,
+    TOK_SWITCH, TOK_CASE, TOK_DEFAULT,
     TOK_TRUE, TOK_FALSE, TOK_NONE,
     TOK_IDENTIFIER, TOK_NUMBER, TOK_STRING,
     TOK_LPAREN, TOK_RPAREN, TOK_LBRACE, TOK_RBRACE,
     TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH, TOK_PERCENT, TOK_POWER,
-    TOK_LT, TOK_GT, TOK_EQ_EQ, TOK_EQ, TOK_COMMA, TOK_COLON, TOK_SEMICOLON,
+    TOK_LT, TOK_GT, TOK_LE, TOK_GE, TOK_EQ_EQ, TOK_EQ, TOK_ARROW, TOK_COMMA, TOK_COLON, TOK_SEMICOLON,
     TOK_EOF, TOK_UNKNOWN
 };
 
@@ -63,11 +64,21 @@ public:
                             tokens.push_back({TOK_SLASH, "/"}); pos++;
                         }
                         break;
-                    case '<': tokens.push_back({TOK_LT, "<"}); pos++; break;
-                    case '>': tokens.push_back({TOK_GT, ">"}); pos++; break;
+                    case '<': 
+                        if (match('=')) tokens.push_back({TOK_LE, "<="});
+                        else tokens.push_back({TOK_LT, "<"}); 
+                        pos++;
+                        break;
+                    case '>': 
+                        if (match('=')) tokens.push_back({TOK_GE, ">="});
+                        else tokens.push_back({TOK_GT, ">"}); 
+                        pos++;
+                        break;
                     case '=': 
                         if (match('=')) tokens.push_back({TOK_EQ_EQ, "=="});
+                        else if (match('>')) tokens.push_back({TOK_ARROW, "=>"});
                         else tokens.push_back({TOK_EQ, "="});
+                        pos++;
                         break;
                     case ',': tokens.push_back({TOK_COMMA, ","}); pos++; break;
                     case ':': tokens.push_back({TOK_COLON, ":"}); pos++; break;
@@ -85,10 +96,9 @@ public:
     
     bool match(char expected) {
         if (pos + 1 < source.length() && source[pos + 1] == expected) {
-            pos += 2;
+            pos++;
             return true;
         }
-        pos++;
         return false;
     }
     
@@ -119,6 +129,9 @@ public:
         else if (text == "true" || text == "так" || text == "істина") type = TOK_TRUE;
         else if (text == "false" || text == "ні" || text == "хиба") type = TOK_FALSE;
         else if (text == "null" || text == "нічого") type = TOK_NONE;
+        else if (text == "switch" || text == "вибір" || text == "співпадіння") type = TOK_SWITCH;
+        else if (text == "case" || text == "варіант") type = TOK_CASE;
+        else if (text == "default" || text == "типово") type = TOK_DEFAULT;
         
         return {type, text};
     }

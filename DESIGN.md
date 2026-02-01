@@ -8,6 +8,40 @@ Taking the best from:
 - **Rust** — pattern matching, Result/Option, ownership ideas (light)
 - **F#/OCaml** — FP first, pipe operators, immutability by default
 
+## 🚀 Advanced Roadmap (UAS 2.1+)
+
+### 1. Pattern Matching (Співпадіння) — Частково реалізовано в 2.0
+Inspired by Rust and Scala.
+```javascript
+співпадіння (число) {
+    варіант 1 => друк("Один")
+    варіант 2 => друк("Два")
+    варіант _ => друк("Інше")
+}
+```
+
+### 2. Object-Oriented Programming (Клас)
+Full support for classes and methods.
+```javascript
+клас Робот {
+    нехай ім'я: стрічка
+    
+    функція привітатися() {
+        друк("Я робот " + ім'я)
+    }
+}
+```
+
+### 3. Reactive Programming (Сигнали)
+Built-in reactivity for high-performance updates.
+```javascript
+нехай х = сигнал(10)
+ефект(() => {
+    друк("Значення х змінилося на: " + х)
+})
+х = 20 // Автоматично викличе ефект
+```
+
 ## Key Principles
 
 1. **Immutable by default** — `var` for mutable, `let` for immutable (default)

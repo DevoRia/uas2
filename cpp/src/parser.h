@@ -22,9 +22,17 @@ public:
     std::unique_ptr<Statement> declaration() {
         if (match(TOK_FN)) return functionDecl();
         if (match(TOK_LET)) return letDecl();
+        
+        // Check for Assignment: ID = Expr
+        if (isName(peek()) && current + 1 < tokens.size() && tokens[current + 1].type == TOK_EQ) {
+            Token name = advance();
+            advance(); // consume '='
+            auto value = expression();
+            if (check(TOK_SEMICOLON)) advance();
+            return std::make_unique<AssignStmt>(name.text, std::move(value));
+        }
+        
         return statement();
-        // Wait, main code might be just statements?
-        // UaScript allows top level statements.
     }
     
     std::unique_ptr<Statement> functionDecl() {
@@ -53,8 +61,17 @@ public:
         return std::make_unique<FunctionDecl>(name.text, params, returnType, std::move(body));
     }
     
+    bool isName(Token t) {
+        return t.type == TOK_IDENTIFIER || t.type == TOK_TRUE || t.type == TOK_FALSE || t.type == TOK_NONE;
+    }
+
     std::unique_ptr<Statement> letDecl() {
-        Token name = consume(TOK_IDENTIFIER, "Expected variable name");
+        Token name = advance(); // already matched TOK_LET
+        if (!isName(name)) {
+             name = consume(TOK_IDENTIFIER, "Expected variable name");
+        }
+        std::string nameStr = name.text;
+        
         std::string typeName = "Value";
         if (match(TOK_COLON)) {
             typeName = consume(TOK_IDENTIFIER, "Expected type name").text;
@@ -63,11 +80,12 @@ public:
         consume(TOK_EQ, "Expected =");
         auto init = expression();
         if (check(TOK_SEMICOLON)) advance();
-        return std::make_unique<LetStmt>(name.text, typeName, std::move(init));
+        return std::make_unique<LetStmt>(nameStr, typeName, std::move(init));
     }
     
     std::unique_ptr<Statement> statement() {
         if (match(TOK_IF)) return ifStmt();
+        if (match(TOK_SWITCH)) return switchStmt();
         if (match(TOK_WHILE)) return whileStmt();
         if (match(TOK_RETURN)) return returnStmt();
         if (match(TOK_LBRACE)) {
@@ -78,6 +96,7 @@ public:
             return blk;
         }
         return exprStmt();
+
     }
     
     std::unique_ptr<BlockStmt> block() {
@@ -102,6 +121,54 @@ public:
         return std::make_unique<IfStmt>(std::move(cond), std::move(thenBranch), std::move(elseBranch));
     }
     
+    std::unique_ptr<Statement> switchStmt() {
+        auto discriminant = expression();
+        consume(TOK_LBRACE, "Expected { after switch discriminant");
+        std::vector<SwitchStmt::Case> cases;
+        while (!check(TOK_RBRACE) && !isAtEnd()) {
+            if (match(TOK_CASE)) {
+                std::string patternName = "";
+                std::unique_ptr<Expression> val = nullptr;
+                std::unique_ptr<Expression> guard = nullptr;
+                
+                // Pattern
+                if (check(TOK_NUMBER) || check(TOK_STRING) || check(TOK_TRUE) || check(TOK_FALSE)) {
+                    // Literal pattern
+                    val = primary(); 
+                } else if (isName(peek())) {
+                    Token t = advance();
+                    patternName = t.text;
+                    if (patternName != "_") {
+                        // It's a variable binding pattern or just a name
+                    }
+                } else {
+                    error("Expected pattern after case/варіант");
+                }
+                
+                // Optional Guard: якщо ...
+                if (match(TOK_IF)) {
+                    guard = expression();
+                }
+                
+                // Separator: => or :
+                if (!match(TOK_ARROW) && !match(TOK_COLON)) {
+                    error("Expected => or : after pattern");
+                }
+                
+                auto body = declaration();
+                cases.push_back({patternName, std::move(val), std::move(guard), std::move(body)});
+            } else if (match(TOK_DEFAULT)) {
+                consume(TOK_COLON, "Expected : after default");
+                auto body = declaration();
+                cases.push_back({"_", nullptr, nullptr, std::move(body)});
+            } else {
+                error("Expected case or default in switch block");
+            }
+        }
+        consume(TOK_RBRACE, "Expected } at end of switch");
+        return std::make_unique<SwitchStmt>(std::move(discriminant), std::move(cases));
+    }
+    
     std::unique_ptr<Statement> whileStmt() {
         auto cond = expression();
         consume(TOK_LBRACE, "Expected { after while condition");
@@ -123,6 +190,12 @@ public:
     }
     
     std::unique_ptr<Expression> expression() {
+        if (isName(peek()) && current + 1 < tokens.size() && tokens[current + 1].type == TOK_EQ) {
+            Token name = advance();
+            advance(); // consume '='
+            auto value = expression();
+            return std::make_unique<AssignExpr>(name.text, std::move(value));
+        }
         return equality();
     }
     
@@ -137,7 +210,7 @@ public:
     
     std::unique_ptr<Expression> comparison() {
         auto expr = term();
-        while (check(TOK_LT) || check(TOK_GT)) {
+        while (check(TOK_LT) || check(TOK_GT) || check(TOK_LE) || check(TOK_GE)) {
             Token op = advance();
             auto right = term();
             expr = std::make_unique<BinaryExpr>(op.text, std::move(expr), std::move(right));
@@ -156,12 +229,29 @@ public:
     }
     
     std::unique_ptr<Expression> factor() {
-        auto expr = primary(); 
+        auto expr = unary(); 
         // Factor is * / % **
         while (check(TOK_STAR) || check(TOK_SLASH) || check(TOK_PERCENT) || check(TOK_POWER)) {
              Token op = advance();
-             auto right = primary(); 
+             auto right = unary(); 
              expr = std::make_unique<BinaryExpr>(op.text, std::move(expr), std::move(right));
+        }
+        return expr;
+    }
+    
+    std::unique_ptr<Expression> unary() {
+        if (match(TOK_MINUS)) {
+            Token op = previous();
+            auto right = unary();
+            return std::make_unique<UnaryExpr>(op.text, std::move(right));
+        }
+        return call();
+    }
+    
+    std::unique_ptr<Expression> call() {
+        auto expr = primary();
+        while (match(TOK_LPAREN)) {
+            expr = finishCall(std::move(expr));
         }
         return expr;
     }
@@ -170,18 +260,19 @@ public:
     // equality -> comparison -> term -> factor -> unary -> call -> primary
     
     std::unique_ptr<Expression> primary() {
-        if (match(TOK_NUMBER)) return std::make_unique<Literal>(previous().text, "float"); // Previous was number
+        if (match(TOK_NUMBER)) return std::make_unique<Literal>(previous().text, "float");
         if (check(TOK_STRING)) return std::make_unique<Literal>(consume(TOK_STRING, "strs").text, "string");
-        if (match(TOK_TRUE)) return std::make_unique<Literal>("true", "bool");
-        if (match(TOK_FALSE)) return std::make_unique<Literal>("false", "bool");
-        if (match(TOK_NONE)) return std::make_unique<Literal>("0", "none"); // Runtime uses 0/none val
         
-        if (match(TOK_IDENTIFIER)) {
-            std::string name = previous().text;
-            // Check for call
-            if (match(TOK_LPAREN)) {
-                return finishCall(name);
-            }
+        // Handle keywords as literals OR identifiers
+        if (check(TOK_TRUE) || check(TOK_FALSE) || check(TOK_NONE) || check(TOK_IDENTIFIER)) {
+            Token t = advance();
+            std::string name = t.text;
+            
+            // If just the token, is it a boolean literal or an identifier?
+            if (t.type == TOK_TRUE) return std::make_unique<Literal>("true", "bool");
+            if (t.type == TOK_FALSE) return std::make_unique<Literal>("false", "bool");
+            if (t.type == TOK_NONE) return std::make_unique<Literal>("0", "none");
+            
             return std::make_unique<Identifier>(name);
         }
         if (match(TOK_LPAREN)) {
@@ -195,15 +286,15 @@ public:
         exit(1);
     }
     
-    std::unique_ptr<Expression> finishCall(std::string name) {
+    std::unique_ptr<Expression> finishCall(std::unique_ptr<Expression> callee) {
         std::vector<std::unique_ptr<Expression>> args;
         if (!check(TOK_RPAREN)) {
             do {
                 args.push_back(expression());
             } while (match(TOK_COMMA));
         }
-        consume(TOK_RPAREN, "Expected )");
-        return std::make_unique<CallExpr>(std::make_unique<Identifier>(name), std::move(args));
+        consume(TOK_RPAREN, "Expected ) after arguments");
+        return std::make_unique<CallExpr>(std::move(callee), std::move(args));
     }
 
     bool match(TokenType type) {
@@ -225,7 +316,7 @@ public:
     }
     
     bool isAtEnd() {
-        return peek().type == TOK_EOF;
+        return current >= tokens.size() || tokens[current].type == TOK_EOF;
     }
     
     Token peek() {
@@ -242,8 +333,9 @@ public:
         exit(1);
     }
     
-    void error(const char* msg) {
-        std::cerr << "Parser Error: " << msg << " (line ~" << current << ")" << std::endl;
+    void error(std::string message) {
+        Token t = peek();
+        std::cerr << "Parser Error: " << message << " at '" << t.text << "' (line ~" << current << ")" << std::endl;
         exit(1);
     }
 };

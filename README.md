@@ -63,6 +63,18 @@ make
 ./uas hello.uas
 ```
 
+### Pattern Matching (Advanced)
+UAS supports advanced pattern matching with variable bindings and guards!
+
+```javascript
+функція аналіз(х) {
+    співпадіння х {
+        варіант 1 => друк("Одиниця")
+        варіант н якщо н > 10 => друк("Велике число: " + н)
+        варіант _ => друк("Інше")
+    }
+}
+```
 
 ## 📖 Language Syntax
 
