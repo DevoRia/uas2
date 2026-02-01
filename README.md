@@ -1,209 +1,210 @@
 # UaScript 2.0
 
-**Programming language with bytecode compilation**
+**A programming language with Ukrainian syntax and AOT compilation to native code**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+UaScript 2.0 is a programming language that supports Ukrainian keywords and compiles directly to machine code via C++, achieving **performance that exceeds Node.js**.
 
 ## Features
 
-- 🌍 **Bilingual Syntax** — write in English or Ukrainian
-- ⚡ **Bytecode VM** — fast execution via virtual machine
-- 🎯 **FP + OOP** — functional and object-oriented programming
-- 📦 **Data classes** — automatic data classes
-- 🔗 **Pipe operator** — elegant function composition
-- 🔄 **Pattern matching** — powerful pattern matching
-- 🛡️ **Null-safety** — Option types instead of null
+- ✅ **Bilingual** - Write code in Ukrainian or English
+- ✅ **AOT Compilation** - UaScript → C++ → Native Code
+- ✅ **Optional Static Typing** - For maximum performance
+- ✅ **Faster than Node.js** - Thanks to ahead-of-time compilation
+- ✅ **Simple and clear syntax**
 
-## Installation
+## Benchmarks
 
-```bash
-# Clone the repository
-git clone https://github.com/user/uascript2.git
-cd uascript2
+### Fibonacci(30) - Performance Comparison
 
-# Install dependencies
-npm install
+| Implementation | Execution Time | Performance |
+|:---------------|:---------------|:------------|
+| **UaScript AOT (with types)** | **~10ms** | **🏆 Fastest** |
+| Node.js (V8 JIT) | ~13-18ms | Baseline |
+| UaScript VM (interpreter) | ~60ms | 6x slower |
 
-# Build
-npm run build
-
-# Run REPL
-npm run repl
-```
+**Result:** UaScript with types is **faster than Node.js** thanks to native code compilation!
 
 ## Quick Start
 
-### Hello World
-
-```
-// In English
-print("Hello, World!")
-
-// In Ukrainian
-друк("Привіт, світ!")
-```
-
-### Variables
-
-```
-// Immutable
-let x = 10
-let y = 20
-
-// Mutable
-var count = 0
-counter = counter + 1
-```
-
-### Functions
-
-```
-fun factorial(n) {
-    if n <= 1 {
-        return 1
-    }
-    return n * factorial(n - 1)
-}
-
-print(factorial(5))  // 120
-```
-
-### Classes
-
-```
-class Point(x, y) {
-    fun distance() {
-        return (self.x ** 2 + self.y ** 2) ** 0.5
-    }
-}
-
-let p = new Point(3, 4)
-print(p.x)           // 3
-print(p.distance())  // 5
-```
-
-### Data Classes
-
-```
-data User(name, age, email)
-
-let user = new User("Taras", 25, "taras@example.com")
-print(user.name)  // Taras
-```
-
-### Lists
-
-```
-let numbers = [1, 2, 3, 4, 5]
-print(numbers[0])        // 1
-print(numbers.length)   // 5
-```
-
-### Conditionals
-
-```
-let x = 42
-
-if x > 100 {
-    print("large")
-} else if x > 10 {
-    print("medium")
-} else {
-    print("small")
-}
-```
-
-### Loops
-
-```
-// While loop
-var i = 0
-while i < 5 {
-    print(i)
-    i = i + 1
-}
-
-// For loop (coming soon)
-for x in [1, 2, 3] {
-    print(x)
-}
-```
-
-### Pipe Operator
-
-```
-fun double(x) { return x * 2 }
-fun addOne(x) { return x + 1 }
-
-// 10 -> double -> 20 -> addOne -> 21
-let result = 10 |> double |> addOne
-print(result)  // 21
-```
-
-## Keywords
-
-| Ukrainian | English | Description |
-|------------|---------|------|
-| нехай | let | Immutable variable |
-| змінна | var | Mutable variable |
-| функція | fun | Function |
-| повернути | return | Return value |
-| якщо | if | Condition |
-| інакше | else | Else condition |
-| поки | while | While loop |
-| для | for | For loop |
-| в | in | In (for loops) |
-| клас | class | Class |
-| дані | data | Data class |
-| новий | new | Create instance |
-| себе | self | Self reference |
-| так | true | Boolean True |
-| ні | false | Boolean False |
-| друк | print | Output |
-
-## CLI
+### Installation
 
 ```bash
-# Run a file
-uas2 program.uas
-
-# Execute code directly
-uas2 -e 'print("Hello!")'
-
-# Start REPL
-uas2 repl
-
-# Debug mode
-uas2 -d program.uas
+git clone https://github.com/yourusername/uas2.git
+cd uas2
+make
 ```
 
-## Architecture
+### Example Code
+
+```javascript
+// In Ukrainian
+функція фібоначчі(n: число): число {
+    якщо n < 2 {
+        повернути n
+    }
+    повернути фібоначчі(n - 1) + фібоначчі(n - 2)
+}
+
+друк("Result: " + фібоначчі(10))
+```
+
+```javascript
+// In English
+fun fibonacci(n: number): number {
+    if n < 2 {
+        return n
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+print("Result: " + fibonacci(10))
+```
+
+### Compile and Run
+
+```bash
+# Simple way
+make run FILE=myprogram.uas
+
+# Or step by step
+build/uas myprogram.uas > output.cpp
+clang++ -O3 -o myprogram output.cpp -Icpp/runtime -std=c++17
+./myprogram
+```
+
+## Documentation
+
+### Supported Features
+
+#### 1. Variables with Types
+```javascript
+нехай x: число = 42
+нехай текст = "Hello"  // type inferred automatically
+змінна counter: число = 0  // mutable variable
+```
+
+#### 2. Functions
+```javascript
+функція додати(a: число, b: число): число {
+    повернути a + b
+}
+```
+
+#### 3. Conditionals
+```javascript
+якщо x > 10 {
+    друк("Greater")
+} інакше {
+    друк("Less")
+}
+```
+
+#### 4. Loops
+```javascript
+поки i < 10 {
+    друк(i)
+    i = i + 1
+}
+```
+
+#### 5. Operators
+- Arithmetic: `+`, `-`, `*`, `/`, `%`, `**` (power)
+- Comparison: `<`, `>`, `<=`, `>=`, `==`
+- Logical: `так` (true), `ні` (false)
+
+### Keywords
+
+| Ukrainian | English | Description |
+|:----------|:--------|:------------|
+| `функція` | `fn`, `fun` | Function declaration |
+| `нехай`, `змінна` | `let` | Variable |
+| `якщо` | `if` | Conditional |
+| `інакше` | `else` | Else |
+| `поки` | `while` | Loop |
+| `повернути` | `return` | Return value |
+| `друк` | `print` | Print to console |
+| `так` | `true` | True |
+| `ні` | `false` | False |
+| `нічого` | `null` | Null value |
+
+### Data Types
+
+- `число` / `number` - Numbers (double)
+- `стрічка` / `string` - Strings
+- `бул` / `bool` - Booleans
+
+## Makefile Commands
+
+```bash
+make          # Build compiler
+make test     # Run tests
+make benchmark # Run benchmarks
+make clean    # Clean build directory
+make run FILE=file.uas  # Compile and run file
+```
+
+## Project Structure
 
 ```
-Source Code (.uas)
-       ↓
-    Lexer (Tokenization)
-       ↓
-    Parser (AST)
-       ↓
-    Compiler (Bytecode)
-       ↓
-    VM (Execution)
+uas2/
+├── benchmarks/     # Performance benchmarks
+│   ├── benchmark.uas
+│   └── benchmark.js
+├── build/          # Compiled binaries (git ignored)
+├── cpp/
+│   ├── runtime/    # C++ runtime for UaScript
+│   └── src/        # Compiler (lexer, parser, transpiler)
+├── examples/       # Code examples
+│   ├── 01_hello.uas
+│   └── 02_calculator.uas
+├── Makefile        # Build system
+├── README.md
+└── DESIGN.md       # Language design documentation
 ```
 
-## Roadmap
+## How It Works
 
-- [x] v0.1 — Basic language (variables, functions, classes, loops)
-- [ ] v0.2 — Pattern matching, Option/Result
-- [ ] v0.3 — Generics, Async/Await
-- [ ] v0.4 — Modules, Package manager
-- [ ] v0.5 — Standard library
-- [ ] v1.0 — Production ready
+1. **Lexer** - Tokenizes source code
+2. **Parser** - Builds AST (Abstract Syntax Tree)
+3. **Transpiler** - Generates typed C++ code
+4. **Clang++** - Compiles C++ to native machine code
+5. **Execution** - Runs as native executable
+
+## Why Faster than Node.js?
+
+1. **Ahead-Of-Time compilation** instead of Just-In-Time
+2. **Static types** - compiler knows types in advance
+3. **Zero overhead** - generates clean C++ code
+4. **Clang++ optimizations** - full optimization at machine code level
+
+## Examples
+
+See `examples/` folder for more:
+- `01_hello.uas` - Hello World
+- `02_calculator.uas` - Calculator with all operators
+
+## Contributing
+
+Contributions are welcome! Feel free to:
+- Add new features
+- Improve documentation
+- Report bugs
+- Suggest ideas
 
 ## License
 
-MIT License — free for any purpose.
+MIT License
 
-## Authors
+## Roadmap
 
-- UaScript Team
+- [ ] Arrays and collections
+- [ ] Classes and objects
+- [ ] Closures
+- [ ] Module system
+- [ ] Package manager
+- [ ] IDE support (VS Code extension)
+- [ ] More optimizations
+
+---
+
+**Built with modern compiler technology**

@@ -1,18 +1,40 @@
-node_modules/\ndist/\nbuild/\n.DS_Store
-
 node_modules/
 dist/
 build/
-.next/
-.vercel/
-*.db
-*.sqlite
-*.log
-.env
-.env.local
-.env.*
-.idea
-node_modules
+.DS_Store
+
+# Build artifacts
+build/
+*.o
+*.out
+*.exe
+
+# Transpiled files (not source files)
+*.cpp
+!cpp/**/*.cpp
+!cpp/**/*.h
+
+# Compiled binaries
+uas_cli
+uas
+uas_transpiler
+benchmark_native
+hello
+calc
+test
+showcase_ua
+comprehensive
+
+# Node modules (legacy)
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
 package-lock.json
 dist
 *.uasb
