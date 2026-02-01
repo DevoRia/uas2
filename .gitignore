@@ -16,7 +16,7 @@ build/
 
 # Compiled binaries
 uas_cli
-uas
+# uas (unignored runner script)
 uas_transpiler
 benchmark_native
 hello
@@ -38,3 +38,4 @@ package-lock.json
 package-lock.json
 dist
 *.uasb
+# UaS (handled by explicit runner script tracking)

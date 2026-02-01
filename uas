@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# UAS - High Performance Ukrainian Programming Language Runner
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: ./uas <file.uas>"
+    exit 1
+fi
+
+FILE=$1
+BASE=$(basename "$FILE" .uas)
+BUILD_DIR="build"
+
+# 1. Build the transpiler if missing or changed
+make -s build/uas || exit 1
+
+# 2. Transpile UAS to C++
+./build/uas "$FILE" > "$BUILD_DIR/$BASE.cpp"
+if [ $? -ne 0 ]; then
+    echo "Error: Transpilation failed"
+    exit 1
+fi
+
+# 3. Compile C++ to Native Binary
+/usr/bin/clang++ -std=c++17 -O3 "$BUILD_DIR/$BASE.cpp" -o "$BUILD_DIR/$BASE" -Icpp/runtime
+if [ $? -ne 0 ]; then
+    echo "Error: Native compilation failed"
+    exit 1
+fi
+
+# 4. Execute the binary
+"./$BUILD_DIR/$BASE"
